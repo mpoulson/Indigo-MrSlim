@@ -1,0 +1,138 @@
+<?xml version="1.0"?>
+<!-- If your plugin defines device types, you can define them here.
+
+	 Devices must specify their type (via the type attribute):
+
+		relay (ON/OFF/STATUS)
+		dimmer (ON/OFF/DIM/BRIGHTEN/SET BRIGHTNESS/STATUS)
+		speedcontrol (ON/OFF/SET SPEED LEVEL/SET SPEED INDEX/INCREASE/DECREASE/STATUS)
+		sensor (ON/OFF/STATUS)
+		thermostat
+		sprinkler
+		custom
+
+	 The first six inherit states, actions and events from Indigo. You can
+	 also specify your own custom actions and additional states, if needed.
+
+	 The Device example below specifies the thermostat type.
+	 
+	 Devices must also specify a unique typeID - so, for instance, if you define
+	 2 different thermostat type devices then your plugin can distinguish between
+	 the two by the typeID.
+-->
+
+<Devices>
+	<!-- This device illustrates how a plugin can inherit Indigo's thermostat
+	device behavior including thermostat device states, thermostat actions,
+	and will support Indigo and Indigo Touch's native UI for thermostat type
+	devices.
+	-->
+	<Device type="thermostat" id="MrSlimThermo">
+		<Name>MrSlim Thermostat Module</Name>
+		<ConfigUI>
+			<!-- The ConfigUI here is just an example of the type of device
+			specific UI that might be needed. Here you might specify a text
+			field for an IP address, a serial port popup, or other device
+			specific options.
+			-->
+			<Field id="address" type="textfield"  hidden="true" >
+				<Label/>
+			</Field>
+			
+		<!-- 	<Field id="thermostatId" type="textfield">
+				<Label>Thermostat ID:</Label>
+				<Description>TCC Id for Thermostat.</Description>
+			</Field> -->
+			<Field id="thermostat" type="menu">
+				<Label>Thermostat:</Label>
+				<List class="self" filter="" method="thermostatList"/>
+				<CallbackMethod>thermostatSelectionChanged</CallbackMethod>
+			</Field>
+			<Field type="textfield" id="thermostatId" readonly="true">
+				<Label>Device ID:</Label>
+			</Field>
+			<Field type="textfield" id="name" readonly="true">
+				<Label>System Name:</Label>
+			</Field>
+			<Field type="textfield" id="friendlyName" readonly="true">
+				<Label>Friendly Name:</Label>
+			</Field>
+			<Field type="textfield" id="ShowCoolHeatEquipmentStateUI" hidden="true">
+				<Label/>
+			</Field>
+			<!--<Field id="password" type="textfield" defaultValue="yourpassword">
+				<Label>HoneyWell TCC Password:</Label>
+			</Field>
+			 By default thermostat type devices automatically inherit these
+			device properties which describe the characteristics of a specific
+			thermostat instance:
+
+				NumTemperatureInputs:			should range between 1 and 3
+				NumHumidityInputs:				should range between 0 and 3
+				ShowCoolHeatEquipmentStateUI:	True or False
+			
+			Plugins can update these properties either in device ConfigUI
+			(like below), or can update them from python by using the
+			dev.replacePluginPropsOnServer() method, most likely inside your
+			deviceStartComm method. Both will trigger
+			the Indigo Server to automatically rebuild the device's states
+			list based on the needed changes. Since most entry-level thermostats
+			have 1 temp sensor and 0 humidity sensors, those are the default
+			values. If your thermostat supports those, you don't need to change
+			anything.
+			-->
+		</ConfigUI>
+		<States>
+			<!-- <State id="macID">
+				<ValueType>String</ValueType>
+				<TriggerLabel>macID</TriggerLabel>
+				<ControlPageLabel>macID</ControlPageLabel>
+			</State>
+ -->			<State id="name">
+				<ValueType>String</ValueType>
+				<TriggerLabel>name</TriggerLabel>
+				<ControlPageLabel>name</ControlPageLabel>
+			</State>
+			<State id="thermostatMode">
+				<ValueType>String</ValueType>
+				<TriggerLabel>thermostatMode</TriggerLabel>
+				<ControlPageLabel>thermostatMode</ControlPageLabel>
+			</State>	
+			<State id="fanAllowedModes">
+				<ValueType>String</ValueType>
+				<TriggerLabel>fanAllowedModes</TriggerLabel>
+				<ControlPageLabel>fanAllowedModes</ControlPageLabel>
+			</State>
+			<State id="fanMode">
+				<ValueType>String</ValueType>
+				<TriggerLabel>fanMode</TriggerLabel>
+				<ControlPageLabel>fanMode</ControlPageLabel>
+			</State>
+			<State id="maxCoolSetpoint">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>maxCoolSetpoint</TriggerLabel>
+				<ControlPageLabel>maxCoolSetpoint</ControlPageLabel>
+			</State>
+			<State id="maxHeatSetpoint">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>maxHeatSetpoint</TriggerLabel>
+				<ControlPageLabel>maxHeatSetpoint</ControlPageLabel>
+			</State>
+			<State id="minCoolSetpoint">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>minCoolSetpoint</TriggerLabel>
+				<ControlPageLabel>minCoolSetpoint</ControlPageLabel>
+			</State>
+			<State id="minHeatSetpoint">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>minHeatSetpoint</TriggerLabel>
+				<ControlPageLabel>minHeatSetpoint</ControlPageLabel>
+			</State>
+			<State id="lastUpdate" hidden="true">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastUpdate</TriggerLabel>
+				<ControlPageLabel>lastUpdate</ControlPageLabel>
+			</State>
+		</States>
+	</Device>
+</Devices>
