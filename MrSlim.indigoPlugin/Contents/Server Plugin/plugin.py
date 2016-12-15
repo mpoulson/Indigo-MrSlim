@@ -120,9 +120,7 @@ class Plugin(indigo.PluginBase):
 		except: self.de (dev, "setpointCool")
 		try: self.updateStateOnServer(dev, "hvacOperationMode", map_to_indigo_hvac_mode[thermostat.SystemSwitch])
 		except: self.de (dev, "hvacOperationMode")
-		try: self.updateStateOnServer(dev, "hvacFanMode", indigo.kFanMode.Auto) #Fan mode is Auto
-		except: self.de (dev, "hvacFanMode")
-
+		
 		try: self.updateStateOnServer(dev, "maxCoolSetpoint", thermostat.CoolUpperSetptLimit)
 		except: self.de (dev, "maxCoolSetpoint")
 		try: self.updateStateOnServer(dev, "maxHeatSetpoint", thermostat.HeatUpperSetptLimit)
@@ -134,15 +132,25 @@ class Plugin(indigo.PluginBase):
 		try: self.updateStateOnServer(dev, "temperatureInput1", thermostat.DispTemperature)
 		except: pass
 
-		if logRefresh:
-			if "setpointHeat" in dev.states:
-				indigo.server.log(u"received \"%s\" cool setpoint update to %.1f°" % (dev.name, dev.states["setpointCool"]))
-			if "setpointCool" in dev.states:
-				indigo.server.log(u"received \"%s\" heat setpoint update to %.1f°" % (dev.name, dev.states["setpointHeat"]))
-			if "hvacOperationMode" in dev.states:
-				indigo.server.log(u"received \"%s\" main mode update to %s" % (dev.name, _lookupActionStrFromHvacMode(dev.states["hvacOperationMode"])))
-			if "hvacFanMode" in dev.states:
-				indigo.server.log(u"received \"%s\" fan mode update to %s" % (dev.name, _lookupActionStrFromFanMode(dev.states["hvacFanMode"])))
+		if  _lookupActionStrFromHvacMode(dev.states["hvacOperationMode"]) == "heat":
+			self.updateStateOnServer(dev, "hvacHeaterIsOn", True)
+			self.updateStateOnServer(dev, "hvacCoolerIsOn", False)
+		elif _lookupActionStrFromHvacMode(dev.states["hvacOperationMode"]) == "cool":
+			self.updateStateOnServer(dev, "hvacHeaterIsOn", False)
+			self.updateStateOnServer(dev, "hvacCoolerIsOn", True)
+		else:
+			self.updateStateOnServer(dev, "hvacHeaterIsOn", False)
+			self.updateStateOnServer(dev, "hvacCoolerIsOn", False)
+
+		# if logRefresh:
+		# 	if "setpointHeat" in dev.states:
+		# 		indigo.server.log(u"received \"%s\" cool setpoint update to %.1f°" % (dev.name, dev.states["setpointCool"]))
+		# 	if "setpointCool" in dev.states:
+		# 		indigo.server.log(u"received \"%s\" heat setpoint update to %.1f°" % (dev.name, dev.states["setpointHeat"]))
+		# 	if "hvacOperationMode" in dev.states:
+		# 		indigo.server.log(u"received \"%s\" main mode update to %s" % (dev.name, _lookupActionStrFromHvacMode(dev.states["hvacOperationMode"])))
+		# 	if "hvacFanMode" in dev.states:
+		# 		indigo.server.log(u"received \"%s\" fan mode update to %s" % (dev.name, _lookupActionStrFromFanMode(dev.states["hvacFanMode"])))
 
 	def updateStateOnServer(self, dev, state, value):
 		if dev.states[state] != value:
@@ -167,6 +175,14 @@ class Plugin(indigo.PluginBase):
 			indigo.server.log(u"Device \"%s\" does not support mode %s" % (dev.name, actionStr), isError=True)
 			return
 		response = self.MrSlim.SetThermostatState(thermostat, actionStr)
+
+		if actionStr == "heat":
+			dev.updateStateOnServer("hvacCoolerIsOn", False)
+			dev.updateStateOnServer("hvacHeaterIsOn", True)
+		else:
+			dev.updateStateOnServer("hvacCoolerIsOn", True)
+			dev.updateStateOnServer("hvacHeaterIsOn", False)
+
 		#self.debugLog(u"Response: %s" % response)
 		sendSuccess = True
 
@@ -183,21 +199,21 @@ class Plugin(indigo.PluginBase):
 
 	######################
 	# Process action request from Indigo Server to change thermostat's fan mode.
-	def _handleChangeFanModeAction(self, dev, newFanMode):
-		# Command hardware module (dev) to change the fan mode here:
-		sendSuccess = True		# Set to False if it failed.
+	# def _handleChangeFanModeAction(self, dev, newFanMode):
+	# 	# Command hardware module (dev) to change the fan mode here:
+	# 	sendSuccess = True		# Set to False if it failed.
 
-		actionStr = _lookupActionStrFromFanMode(newFanMode)
-		if sendSuccess:
-			# If success then log that the command was successfully sent.
-			indigo.server.log(u"sent \"%s\" fan mode change to %s" % (dev.name, actionStr))
+	# 	actionStr = _lookupActionStrFromFanMode(newFanMode)
+	# 	if sendSuccess:
+	# 		# If success then log that the command was successfully sent.
+	# 		indigo.server.log(u"sent \"%s\" fan mode change to %s" % (dev.name, actionStr))
 
-			# And then tell the Indigo Server to update the state.
-			if "hvacFanMode" in dev.states:
-				dev.updateStateOnServer("hvacFanMode", newFanMode)
-		else:
-			# Else log failure but do NOT update state on Indigo Server.
-			indigo.server.log(u"send \"%s\" fan mode change to %s failed" % (dev.name, actionStr), isError=True)
+	# 		# And then tell the Indigo Server to update the state.
+	# 		if "hvacFanMode" in dev.states:
+	# 			dev.updateStateOnServer("hvacFanMode", newFanMode)
+	# 	else:
+	# 		# Else log failure but do NOT update state on Indigo Server.
+	# 		indigo.server.log(u"send \"%s\" fan mode change to %s failed" % (dev.name, actionStr), isError=True)
 
 	######################
 	# Process action request from Indigo Server to change a cool/heat setpoint.
@@ -244,6 +260,7 @@ class Plugin(indigo.PluginBase):
 	def startup(self):
 		self.debugLog(u"MrSlim startup called")
 		self.debug = self.pluginPrefs.get('showDebugInLog', False)
+
 		self.MrSlim.startup()
 		self.buildAvailableDeviceList()
 
@@ -401,10 +418,10 @@ class Plugin(indigo.PluginBase):
 		self.updateStateOnServer (dev, "fanAllowedModes", "")
 		self.updateStateOnServer (dev, "fanMode", "")
 		self.updateStateOnServer (dev, "name", "")
-
-		# new_props = dev.pluginProps
-		# new_props['address'] = ""
-		# dev.replacePluginPropsOnServer(new_props)
+		
+		new_props = dev.pluginProps
+		new_props['SupportsHvacFanMode'] = False
+		dev.replacePluginPropsOnServer(new_props)
 
 		self.debugLog("Initializing thermostat device: %s" % dev.name)
 
