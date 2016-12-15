@@ -108,10 +108,10 @@ class Plugin(indigo.PluginBase):
 		self.debugLog(u"Getting data for thermostatId: %s" % thermostatId)
 
 		thermostat = MrSlim.GetThermostat(self.MrSlim,thermostatId)
-		
+
 		self.debugLog(u"Device Name: %s" % thermostat.name)
 		self.debugLog(u"***Device SystemSwitch: %s" % map_to_indigo_hvac_mode[thermostat.SystemSwitch])
-		
+
 		try: self.updateStateOnServer(dev, "name", thermostat.friendlyName)
 		except: self.de (dev, "name")
 		try: self.updateStateOnServer(dev, "setpointHeat", float(thermostat.HeatSetPoint))
@@ -160,7 +160,7 @@ class Plugin(indigo.PluginBase):
 
 		sendSuccess = False
 		thermostatId = dev.pluginProps["thermostatId"]
-		
+
 		thermostat = MrSlim.GetThermostat(self.MrSlim,thermostatId)
 		actionStr = _lookupActionStrFromHvacMode(newHvacMode)
 		if actionStr == "auto":
@@ -288,7 +288,7 @@ class Plugin(indigo.PluginBase):
 		if len(errorsDict) > 0:
 			self.errorLog(u"\t Validation Errors")
 			return (False, valuesDict, errorsDict)
-		else:			
+		else:
 			self.debugLog(u"\t Validation Succesful")
 			return (True, valuesDict)
 		return (True, valuesDict)
@@ -376,7 +376,7 @@ class Plugin(indigo.PluginBase):
 	def closedPrefsConfigUi(self, valuesDict, userCancelled):
 		if not userCancelled:
 			#Check if Debugging is set
-			try:		
+			try:
 				self.debug = self.pluginPrefs[u'showDebugInLog']
 			except:
 				self.debug = False
@@ -388,7 +388,7 @@ class Plugin(indigo.PluginBase):
 					self.Password = self.pluginPrefs["Password"]
 			except:
 				pass
-		
+
 			indigo.server.log("[%s] Processed plugin preferences." % time.asctime())
 			return True
 	def validateDeviceConfigUi(self, valuesDict, typeId, devId):
@@ -401,7 +401,7 @@ class Plugin(indigo.PluginBase):
 		self.updateStateOnServer (dev, "fanAllowedModes", "")
 		self.updateStateOnServer (dev, "fanMode", "")
 		self.updateStateOnServer (dev, "name", "")
-		
+
 		# new_props = dev.pluginProps
 		# new_props['address'] = ""
 		# dev.replacePluginPropsOnServer(new_props)
@@ -433,7 +433,7 @@ class Plugin(indigo.PluginBase):
 					self.debugLog("    removing item %s" % (id))
 					del deviceListCopy[id]
 					break
-					
+
 		if len(deviceListCopy) > 0:
 			for (id,value) in deviceListCopy.iteritems():
 				deviceArray.append((id,value.friendlyName))
