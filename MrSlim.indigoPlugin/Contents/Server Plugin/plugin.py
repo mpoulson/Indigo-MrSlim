@@ -60,6 +60,7 @@ class Plugin(indigo.PluginBase):
 		self.UserID = None
 		self.Password = None
 		self.deviceList = {}
+		self.loginFailed = False
 
 	# ########################################
 	# # Internal utility methods. Some of these are useful to provide
@@ -261,14 +262,22 @@ class Plugin(indigo.PluginBase):
 		self.debugLog(u"MrSlim startup called")
 		self.debug = self.pluginPrefs.get('showDebugInLog', False)
 
-		self.MrSlim.startup()
-		self.buildAvailableDeviceList()
-
 		self.updater = GitHubPluginUpdater(self)
 		self.updater.checkForUpdate()
 		self.updateFrequency = float(self.pluginPrefs.get('updateFrequency', 24)) * 60.0 * 60.0
 		self.debugLog(u"updateFrequency = " + str(self.updateFrequency))
 		self.next_update_check = time.time()
+		self.login(False)
+
+	def login(self, force):
+		if self.MrSlim.startup(force) == False:
+			indigo.server.log(u"Login to TCC site failed.  Canceling processing!", isError=True)
+			self.loginFailed = True
+			return
+		else:
+			self.loginFailed = False
+
+		self.buildAvailableDeviceList()
 
 	def shutdown(self):
 		self.debugLog(u"shutdown called")
@@ -277,18 +286,19 @@ class Plugin(indigo.PluginBase):
 	def runConcurrentThread(self):
 		try:
 			while True:
-				if (self.updateFrequency > 0.0) and (time.time() > self.next_update_check):
-					self.next_update_check = time.time() + self.updateFrequency
-					self.updater.checkForUpdate()
+				if self.loginFailed == False:
+					if (self.updateFrequency > 0.0) and (time.time() > self.next_update_check):
+						self.next_update_check = time.time() + self.updateFrequency
+						self.updater.checkForUpdate()
 
-				for dev in indigo.devices.iter("self"):
-					if not dev.enabled:
-						continue
+					for dev in indigo.devices.iter("self"):
+						if not dev.enabled:
+							continue
 
-					# Plugins that need to poll out the status from the thermostat
-					# could do so here, then broadcast back the new values to the
-					# Indigo Server.
-					self._refreshStatesFromHardware(dev, False, False)
+						# Plugins that need to poll out the status from the thermostat
+						# could do so here, then broadcast back the new values to the
+						# Indigo Server.
+						self._refreshStatesFromHardware(dev, False, False)
 
 				self.sleep(20)
 		except self.StopThread:
@@ -312,6 +322,9 @@ class Plugin(indigo.PluginBase):
 
 	########################################
 	def deviceStartComm(self, dev):
+		if self.loginFailed == True:
+			return
+
 		# Called when communication with the hardware should be established.
 		# Here would be a good place to poll out the current states from the
 		# thermostat. If periodic polling of the thermostat is needed (that
@@ -401,12 +414,14 @@ class Plugin(indigo.PluginBase):
 			try:
 				if (self.UserID != self.pluginPrefs["UserID"]) or \
 					(self.Password != self.pluginPrefs["Password"]):
+					indigo.server.log("[%s] Replacting Username/Password." % time.asctime())
 					self.UserID = self.pluginPrefs["UserID"]
 					self.Password = self.pluginPrefs["Password"]
 			except:
 				pass
 
 			indigo.server.log("[%s] Processed plugin preferences." % time.asctime())
+			self.login(True)
 			return True
 	def validateDeviceConfigUi(self, valuesDict, typeId, devId):
 		self.debugLog(u"validateDeviceConfigUi called with valuesDict: %s" % str(valuesDict))
