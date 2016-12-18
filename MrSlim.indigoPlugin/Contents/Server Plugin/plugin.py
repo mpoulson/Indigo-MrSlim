@@ -62,29 +62,6 @@ class Plugin(indigo.PluginBase):
 		self.deviceList = {}
 		self.loginFailed = False
 
-	# ########################################
-	# # Internal utility methods. Some of these are useful to provide
-	# # a higher-level abstraction for accessing/changing thermostat
-	# # properties or states.
-	# ######################
-	# def _changeTempSensorCount(self, dev, count):
-	# 	newProps = dev.pluginProps
-	# 	newProps["NumTemperatureInputs"] = count
-	# 	dev.replacePluginPropsOnServer(newProps)
-
-	# def _changeHumiditySensorCount(self, dev, count):
-	# 	newProps = dev.pluginProps
-	# 	newProps["NumHumidityInputs"] = count
-	# 	dev.replacePluginPropsOnServer(newProps)
-
-	# def _changeAllTempSensorCounts(self, count):
-	# 	for dev in indigo.devices.iter("self"):
-	# 		self._changeTempSensorCount(dev, count)
-
-	# def _changeAllHumiditySensorCounts(self, count):
-	# 	for dev in indigo.devices.iter("self"):
-	# 		self._changeHumiditySensorCount(dev, count)
-
 	######################
 	def _changeTempSensorValue(self, dev, index, value, keyValueList):
 		# Update the temperature value at index. If index is greater than the "NumTemperatureInputs"
@@ -92,13 +69,6 @@ class Plugin(indigo.PluginBase):
 		stateKey = u"temperatureInput" + str(index)
 		keyValueList.append({'key':stateKey, 'value':value, 'uiValue':"%d °F" % (value)})
 		self.debugLog(u"\"%s\" updating %s %d" % (dev.name, stateKey, value))
-
-	# def _changeHumiditySensorValue(self, dev, index, value, keyValueList):
-	# 	# Update the humidity value at index. If index is greater than the "NumHumidityInputs"
-	# 	# an error will be displayed in the Event Log "humidity index out-of-range"
-	# 	stateKey = u"humidityInput" + str(index)
-	# 	keyValueList.append({'key':stateKey, 'value':value, 'uiValue':"%d °F" % (value)})
-	# 	self.debugLog(u"\"%s\" updating %s %d" % (dev.name, stateKey, value))
 
 	######################
 	# Poll all of the states from the thermostat and pass new values to
@@ -142,16 +112,6 @@ class Plugin(indigo.PluginBase):
 		else:
 			self.updateStateOnServer(dev, "hvacHeaterIsOn", False)
 			self.updateStateOnServer(dev, "hvacCoolerIsOn", False)
-
-		# if logRefresh:
-		# 	if "setpointHeat" in dev.states:
-		# 		indigo.server.log(u"received \"%s\" cool setpoint update to %.1f°" % (dev.name, dev.states["setpointCool"]))
-		# 	if "setpointCool" in dev.states:
-		# 		indigo.server.log(u"received \"%s\" heat setpoint update to %.1f°" % (dev.name, dev.states["setpointHeat"]))
-		# 	if "hvacOperationMode" in dev.states:
-		# 		indigo.server.log(u"received \"%s\" main mode update to %s" % (dev.name, _lookupActionStrFromHvacMode(dev.states["hvacOperationMode"])))
-		# 	if "hvacFanMode" in dev.states:
-		# 		indigo.server.log(u"received \"%s\" fan mode update to %s" % (dev.name, _lookupActionStrFromFanMode(dev.states["hvacFanMode"])))
 
 	def updateStateOnServer(self, dev, state, value):
 		if dev.states[state] != value:
@@ -198,25 +158,6 @@ class Plugin(indigo.PluginBase):
 			# Else log failure but do NOT update state on Indigo Server.
 			indigo.server.log(u"send \"%s\" mode change to %s failed" % (dev.name, actionStr), isError=True)
 
-	######################
-	# Process action request from Indigo Server to change thermostat's fan mode.
-	# def _handleChangeFanModeAction(self, dev, newFanMode):
-	# 	# Command hardware module (dev) to change the fan mode here:
-	# 	sendSuccess = True		# Set to False if it failed.
-
-	# 	actionStr = _lookupActionStrFromFanMode(newFanMode)
-	# 	if sendSuccess:
-	# 		# If success then log that the command was successfully sent.
-	# 		indigo.server.log(u"sent \"%s\" fan mode change to %s" % (dev.name, actionStr))
-
-	# 		# And then tell the Indigo Server to update the state.
-	# 		if "hvacFanMode" in dev.states:
-	# 			dev.updateStateOnServer("hvacFanMode", newFanMode)
-	# 	else:
-	# 		# Else log failure but do NOT update state on Indigo Server.
-	# 		indigo.server.log(u"send \"%s\" fan mode change to %s failed" % (dev.name, actionStr), isError=True)
-
-	######################
 	# Process action request from Indigo Server to change a cool/heat setpoint.
 	def _handleChangeSetpointAction(self, dev, newSetpoint, logActionName, stateKey):
 		self.debugLog(u"_handleChangeSetpointAction - StateKey: %s" % stateKey)
@@ -430,8 +371,6 @@ class Plugin(indigo.PluginBase):
 		return (True, valuesDict)
 
 	def initDevice(self, dev):
-		self.updateStateOnServer (dev, "fanAllowedModes", "")
-		self.updateStateOnServer (dev, "fanMode", "")
 		self.updateStateOnServer (dev, "name", "")
 		
 		new_props = dev.pluginProps
