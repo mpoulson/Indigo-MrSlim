@@ -4,10 +4,10 @@
 		<Label>Total Connect Comfort MrSlim Plugin</Label>
 	</Field>
 	<Field type="textfield" id="UserID" tooltip="MrSlim User ID" visibleBindingValue="true">
-		<Label>MrSlim TCC User ID:</Label>
+		<Label>MrSlim User ID:</Label>
 	</Field>
 	<Field type="textfield" id="Password" secure="true" tooltip="MrSlim Password" visibleBindingValue="true">
-		<Label>MrSlim TCC Password:</Label>
+		<Label>MrSlim Password:</Label>
 	</Field>
 	 <Field id="sep1" type="separator"/>
     <Field id="updateFrequency" type="textfield" defaultValue="24">
