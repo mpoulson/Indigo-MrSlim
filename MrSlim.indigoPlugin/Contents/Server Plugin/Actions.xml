@@ -65,4 +65,8 @@
 			</Field> -->
 		</ConfigUI>
 	</Action>
+	<Action id="resumeProgram" deviceFilter="self">
+		<Name>Resume Program Mode</Name>
+		<CallbackMethod>_resumeProgram</CallbackMethod>
+	</Action>
 </Actions>

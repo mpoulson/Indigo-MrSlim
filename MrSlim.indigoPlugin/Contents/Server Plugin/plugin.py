@@ -73,7 +73,7 @@ class Plugin(indigo.PluginBase):
 	######################
 	# Poll all of the states from the thermostat and pass new values to
 	# Indigo Server.
-	def _refreshStatesFromHardware(self, dev, logRefresh, commJustStarted):
+	def _refreshStatesFromHardware(self, dev):
 
 		thermostatId = dev.pluginProps["thermostatId"]
 		self.debugLog(u"Getting data for thermostatId: %s" % thermostatId)
@@ -82,6 +82,8 @@ class Plugin(indigo.PluginBase):
 
 		self.debugLog(u"Device Name: %s" % thermostat.name)
 		self.debugLog(u"***Device SystemSwitch: %s" % map_to_indigo_hvac_mode[thermostat.SystemSwitch])
+
+		self.debugLog(u"\t\tDevice State: %s" % thermostat.StatusHeat)
 
 		try: self.updateStateOnServer(dev, "name", thermostat.friendlyName)
 		except: self.de (dev, "name")
@@ -239,9 +241,9 @@ class Plugin(indigo.PluginBase):
 						# Plugins that need to poll out the status from the thermostat
 						# could do so here, then broadcast back the new values to the
 						# Indigo Server.
-						self._refreshStatesFromHardware(dev, False, False)
+						self._refreshStatesFromHardware(dev)
 
-				self.sleep(20)
+				self.sleep(30)
 		except self.StopThread:
 			pass	# Optionally catch the StopThread exception and do any needed cleanup.
 
@@ -274,7 +276,6 @@ class Plugin(indigo.PluginBase):
 		self.initDevice(dev)
 
 		dev.stateListOrDisplayStateIdChanged()
-		#self._refreshStatesFromHardware(dev, True, True)
 
 	def deviceStopComm(self, dev):
 		# Called when communication with the hardware should be shutdown.
@@ -326,7 +327,7 @@ class Plugin(indigo.PluginBase):
 		elif action.thermostatAction in [indigo.kThermostatAction.RequestStatusAll, indigo.kThermostatAction.RequestMode,
 		indigo.kThermostatAction.RequestEquipmentState, indigo.kThermostatAction.RequestTemperatures, indigo.kThermostatAction.RequestHumidities,
 		indigo.kThermostatAction.RequestDeadbands, indigo.kThermostatAction.RequestSetpoints]:
-			self._refreshStatesFromHardware(dev, True, False)
+			self._refreshStatesFromHardware(dev)
 
 	########################################
 	# Actions defined in MenuItems.xml. In this case we just use these menu actions to
@@ -343,6 +344,15 @@ class Plugin(indigo.PluginBase):
 		dev = indigo.devices[pluginAction.deviceId]
 
 		self._handleChangeSetpointAction(dev, pluginAction.props.get("Temprature"), "Action Setpoint",pluginAction.pluginTypeId)
+
+	def _resumeProgram(self, pluginAction):
+		self.debugLog(u"\t Resuming Program Mode on device")
+		dev = indigo.devices[pluginAction.deviceId]
+		thermostatId = dev.pluginProps["thermostatId"]
+		self.debugLog(u"Getting data for thermostatId: %s" % thermostatId)
+		
+		thermostat = MrSlim.GetThermostat(self.MrSlim,thermostatId)
+		self.MrSlim.SetThermostatStatus(thermostat,'Schedule')
 
 	def closedPrefsConfigUi(self, valuesDict, userCancelled):
 		if not userCancelled:
