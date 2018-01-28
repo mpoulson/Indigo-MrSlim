@@ -80,6 +80,9 @@ class Plugin(indigo.PluginBase):
 		self.debugLog(u"Getting data for thermostatId: %s" % thermostatId)
 
 		thermostat = MrSlim.GetThermostat(self.MrSlim,thermostatId)
+		if not hasattr(thermostat, 'name'):
+			self.restartCount = 2000000 # Force restart
+			return
 
 		self.debugLog(u"Device Name: %s" % thermostat.name)
 		self.debugLog(u"***Device SystemSwitch: %s" % map_to_indigo_hvac_mode[thermostat.SystemSwitch])
