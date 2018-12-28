@@ -12,7 +12,7 @@ import urllib
 import time
 from MrSlim import MrSlim
 from copy import deepcopy
-from ghpu import GitHubPluginUpdater
+import versionCheck.versionCheck as VS
 # Need json support; Use "simplejson" for Indigo support
 try:
 	import simplejson as json
@@ -209,8 +209,6 @@ class Plugin(indigo.PluginBase):
 		self.debugLog(u"MrSlim startup called")
 		self.debug = self.pluginPrefs.get('showDebugInLog', False)
 
-		self.updater = GitHubPluginUpdater(self)
-		self.updater.checkForUpdate()
 		self.updateFrequency = float(self.pluginPrefs.get('updateFrequency', 24)) * 60.0 * 60.0
 		self.debugLog(u"updateFrequency = " + str(self.updateFrequency))
 		self.next_update_check = time.time()
@@ -236,7 +234,7 @@ class Plugin(indigo.PluginBase):
 				if self.loginFailed == False:
 					if (self.updateFrequency > 0.0) and (time.time() > self.next_update_check):
 						self.next_update_check = time.time() + self.updateFrequency
-						self.updater.checkForUpdate()
+						self.version_check()
 
 					for dev in indigo.devices.iter("self"):
 						if not dev.enabled:
@@ -254,8 +252,9 @@ class Plugin(indigo.PluginBase):
 					serverPlugin = indigo.server.getPlugin(self.pluginId)
 					serverPlugin.restart(waitUntilDone=False)
 					break
-				self.sleep(30)
+				self.sleep(5)
 		except self.StopThread:
+			self.debugLog("shutdown requested")
 			pass	# Optionally catch the StopThread exception and do any needed cleanup.
 
 	########################################
@@ -376,7 +375,7 @@ class Plugin(indigo.PluginBase):
 			try:
 				if (self.UserID != self.pluginPrefs["UserID"]) or \
 					(self.Password != self.pluginPrefs["Password"]):
-					indigo.server.log("[%s] Replacting Username/Password." % time.asctime())
+					indigo.server.log("[%s] Setting Username/Password." % time.asctime())
 					self.UserID = self.pluginPrefs["UserID"]
 					self.Password = self.pluginPrefs["Password"]
 			except:
@@ -449,11 +448,5 @@ class Plugin(indigo.PluginBase):
 		self.debugLog("    thermostatSelectionChanged valuesDict to be returned:\n%s" % (str(valuesDict)))
 		return valuesDict
 	##########################################
-	def checkForUpdates(self):
-		self.updater.checkForUpdate()
-
-	def updatePlugin(self):
-		self.updater.update()
-
-	def forceUpdate(self):
-		self.updater.update(currentVersion='0.0.0')
+	def version_check(self):
+		VS.versionCheck(self.pluginId,self.pluginVersion,indigo,printToLog="log")
