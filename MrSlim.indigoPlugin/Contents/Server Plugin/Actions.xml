@@ -65,6 +65,20 @@
 			</Field> -->
 		</ConfigUI>
 	</Action>
+	<Action id="fanMode" deviceFilter="self">
+            <Name>Set Fan Mode</Name>
+            <CallbackMethod>_actionSetFanMode</CallbackMethod>
+            <ConfigUI>
+                <Field type="menu" id="fanmode1" defaultValue="Auto">
+                    <Label>What Fan Mode?</Label>
+                    <List>
+                        <Option value="Auto">Auto</Option>
+                        <Option value="Circulate">Circulate</Option>
+						<Option value="On">On</Option>
+                    </List>
+                </Field>
+            </ConfigUI>
+        </Action>
 	<Action id="resumeProgram" deviceFilter="self">
 		<Name>Resume Program Mode</Name>
 		<CallbackMethod>_resumeProgram</CallbackMethod>

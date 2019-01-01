@@ -37,6 +37,9 @@ kFanModeEnumToStrMap = {
 	indigo.kFanMode.AlwaysOn			: u"always on",
 	indigo.kFanMode.Auto				: u"auto"
 }
+map_to_indigo_fan_mode={'On':indigo.kFanMode.AlwaysOn,
+						'Circulate':indigo.kFanMode.AlwaysOn,
+						'Auto':indigo.kFanMode.Auto}
 
 map_to_indigo_hvac_mode={'cool':indigo.kHvacMode.Cool,
 						'heat':indigo.kHvacMode.Heat,
@@ -83,11 +86,11 @@ class Plugin(indigo.PluginBase):
 		if not hasattr(thermostat, 'name'):
 			self.restartCount = 2000000 # Force restart
 			return
-
+		
 		self.debugLog(u"Device Name: %s" % thermostat.name)
 		self.debugLog(u"***Device SystemSwitch: %s" % map_to_indigo_hvac_mode[thermostat.SystemSwitch])
 
-		self.debugLog(u"\t\tDevice State: %s" % thermostat.StatusHeat)
+		self.debugLog(u"Device State: %s" % thermostat.StatusHeat)
 
 		try: self.updateStateOnServer(dev, "name", thermostat.friendlyName)
 		except: self.de (dev, "name")
@@ -97,6 +100,10 @@ class Plugin(indigo.PluginBase):
 		except: self.de (dev, "setpointCool")
 		try: self.updateStateOnServer(dev, "hvacOperationMode", map_to_indigo_hvac_mode[thermostat.SystemSwitch])
 		except: self.de (dev, "hvacOperationMode")
+		isFanEnabled = dev.pluginProps.get("SupportsHvacFanMode", None)
+		if isFanEnabled:
+			try: self.updateStateOnServer(dev, "hvacFanMode", map_to_indigo_fan_mode[thermostat.Fan.position])
+			except: self.de (dev, "hvacFanMode")
 		
 		try: self.updateStateOnServer(dev, "maxCoolSetpoint", thermostat.CoolUpperSetptLimit)
 		except: self.de (dev, "maxCoolSetpoint")
@@ -108,6 +115,9 @@ class Plugin(indigo.PluginBase):
 		except: self.de (dev, "minHeatSetpoint")
 		try: self.updateStateOnServer(dev, "temperatureInput1", thermostat.DispTemperature)
 		except: pass
+		if thermostat.IndoorHumidity:
+			try: self.updateStateOnServer(dev, "IndoorHumidity", thermostat.IndoorHumidity)
+			except: self.de (dev, "IndoorHumidity")
 
 		if  _lookupActionStrFromHvacMode(dev.states["hvacOperationMode"]) == "heat":
 			self.updateStateOnServer(dev, "hvacHeaterIsOn", True)
@@ -135,7 +145,6 @@ class Plugin(indigo.PluginBase):
 
 		sendSuccess = False
 		thermostatId = dev.pluginProps["thermostatId"]
-
 		thermostat = MrSlim.GetThermostat(self.MrSlim,thermostatId)
 		actionStr = _lookupActionStrFromHvacMode(newHvacMode)
 		if actionStr == "auto":
@@ -203,6 +212,34 @@ class Plugin(indigo.PluginBase):
 		else:
 			# Else log failure but do NOT update state on Indigo Server.
 			indigo.server.log(u"send \"%s\" %s to %.1f° failed" % (dev.name, logActionName, float(newSetpoint)), isError=True)
+	def _handleSetFanModeAction(self, dev, fanMode, logActionName, stateKey):
+		self.debugLog(u"handleSetFanModeAction - StateKey: %s" % stateKey)
+
+		sendSuccess = False
+		thermostatId = dev.pluginProps["thermostatId"]
+		self.debugLog(u"Getting data for thermostatId: %s" % thermostatId)
+		self.debugLog(u"FanMode: %s" % fanMode)
+	
+		thermostat = MrSlim.GetThermostat(self.MrSlim,thermostatId)
+		self.debugLog(u"Thermostat Fan CanControl Value: %s" % thermostat.Fan.canControl)
+
+		if thermostat.Fan.canControl != u"true":
+			indigo.server.log(u"Unable to use fan Control on \"%s\"  because the Server said canControl = %s°" % (dev.name, thermostat.Fan.canControl))
+		else:
+			if stateKey == u"fanMode":
+				self.MrSlim.SetThermostatFanMode(thermostat,fanMode)
+				sendSuccess = True			# Set to False if it failed.
+			
+			if sendSuccess:
+				# If success then log that the command was successfully sent.
+				indigo.server.log(u"sent \"%s\" %s to %s°" % (dev.name, logActionName, fanMode))
+
+				# And then tell the Indigo Server to update the state.
+				if stateKey in dev.states:
+					dev.updateStateOnServer(stateKey, fanMode, uiValue="%s" % fanMode)
+			else:
+				# Else log failure but do NOT update state on Indigo Server.
+				indigo.server.log(u"send \"%s\" %s to %.1f° failed" % (dev.name, logActionName, fanMode), isError=True)
 
 	########################################
 	def startup(self):
@@ -226,6 +263,7 @@ class Plugin(indigo.PluginBase):
 
 	def shutdown(self):
 		self.debugLog(u"shutdown called")
+		self.StopThread = True
 
 	########################################
 	def runConcurrentThread(self):
@@ -252,7 +290,7 @@ class Plugin(indigo.PluginBase):
 					serverPlugin = indigo.server.getPlugin(self.pluginId)
 					serverPlugin.restart(waitUntilDone=False)
 					break
-				self.sleep(5)
+				self.sleep(7)
 		except self.StopThread:
 			self.debugLog("shutdown requested")
 			pass	# Optionally catch the StopThread exception and do any needed cleanup.
@@ -303,7 +341,7 @@ class Plugin(indigo.PluginBase):
 
 		###### SET FAN MODE ######
 		elif action.thermostatAction == indigo.kThermostatAction.SetFanMode:
-			self._handleChangeFanModeAction(dev, action.actionMode)
+			self._handleSetFanModeAction(dev, action.actionMode)
 
 		###### SET COOL SETPOINT ######
 		elif action.thermostatAction == indigo.kThermostatAction.SetCoolSetpoint:
@@ -354,6 +392,11 @@ class Plugin(indigo.PluginBase):
 		dev = indigo.devices[pluginAction.deviceId]
 
 		self._handleChangeSetpointAction(dev, pluginAction.props.get("Temprature"), "Action Setpoint",pluginAction.pluginTypeId)
+	def _actionSetFanMode(self, pluginAction):
+		self.debugLog(u"\t Set %s - Setpoint: %s" % (pluginAction.pluginTypeId, pluginAction.props.get("Temprature")))
+		dev = indigo.devices[pluginAction.deviceId]
+
+		self._handleSetFanModeAction(dev, pluginAction.props.get("fanmode1"), "Action SetFanMode",pluginAction.pluginTypeId)
 
 	def _resumeProgram(self, pluginAction):
 		self.debugLog(u"\t Resuming Program Mode on device")
@@ -391,13 +434,12 @@ class Plugin(indigo.PluginBase):
 		return (True, valuesDict)
 
 	def initDevice(self, dev):
-		self.updateStateOnServer (dev, "name", "")
-		
-		new_props = dev.pluginProps
-		new_props['SupportsHvacFanMode'] = False
-		dev.replacePluginPropsOnServer(new_props)
+		if dev.deviceTypeId == "MrSlimThermo":
+			new_props = dev.pluginProps
+			new_props['SupportsHvacFanMode'] = False
+			dev.replacePluginPropsOnServer(new_props)
 
-		self.debugLog("Initializing thermostat device: %s" % dev.name)
+			self.debugLog("Initializing thermostat device: %s" % dev.name)
 
 	def buildAvailableDeviceList(self):
 		self.debugLog("Building Available Device List")

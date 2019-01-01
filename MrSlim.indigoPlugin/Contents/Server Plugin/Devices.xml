@@ -55,6 +55,119 @@
 				<TriggerLabel>minHeatSetpoint</TriggerLabel>
 				<ControlPageLabel>minHeatSetpoint</ControlPageLabel>
 			</State>
+			<State id="fan_mode">
+				<ValueType>
+                    <List>
+                        <Option value="Auto">Auto</Option>
+                        <Option value="Circulate">Circulate</Option>
+                        <Option value="On">On</Option>
+                    </List>
+                </ValueType>
+				<TriggerLabel>Fan Mode Changed</TriggerLabel>
+                <TriggerLabelPrefix>Fan Mode Changed to</TriggerLabelPrefix>
+				<ControlPageLabel>Fan Mode</ControlPageLabel>
+                <ControlPageLabelPrefix>Fan Mode is</ControlPageLabelPrefix>
+			</State>
+			<State id="isFanRunning">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>isFanRunning</TriggerLabel>
+				<ControlPageLabel>isFanRunning</ControlPageLabel>
+			</State>
+			<State id="IndoorHumidity">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>IndoorHumidity</TriggerLabel>
+				<ControlPageLabel>IndoorHumidity</ControlPageLabel>
+			</State>
+			<State id="OutdoorHumidity">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>OutdoorHumidity</TriggerLabel>
+				<ControlPageLabel>OutdoorHumidity</ControlPageLabel>
+			</State>
+		</States>
+	</Device>
+	<Device type="thermostat" id="HoneyWellThermo">
+		<Name>Honeywell Thermostat Module</Name>
+		<ConfigUI>
+			<Field id="address" type="textfield"  hidden="true" >
+				<Label/>
+			</Field>
+			<Field id="thermostat" type="menu">
+				<Label>Thermostat:</Label>
+				<List class="self" filter="" method="thermostatList"/>
+				<CallbackMethod>thermostatSelectionChanged</CallbackMethod>
+			</Field>
+			<Field type="textfield" id="thermostatId" readonly="true">
+				<Label>Device ID:</Label>
+			</Field>
+			<Field type="textfield" id="name" readonly="true">
+				<Label>System Name:</Label>
+			</Field>
+			<Field type="textfield" id="friendlyName" readonly="true">
+				<Label>Friendly Name:</Label>
+			</Field>
+			<Field type="textfield" id="ShowCoolHeatEquipmentStateUI" hidden="true">
+				<Label/>
+			</Field>
+		</ConfigUI>
+		<States>
+			<State id="name">
+				<ValueType>String</ValueType>
+				<TriggerLabel>name</TriggerLabel>
+				<ControlPageLabel>name</ControlPageLabel>
+			</State>
+			<State id="thermostatMode">
+				<ValueType>String</ValueType>
+				<TriggerLabel>thermostatMode</TriggerLabel>
+				<ControlPageLabel>thermostatMode</ControlPageLabel>
+			</State>
+			<State id="maxCoolSetpoint">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>maxCoolSetpoint</TriggerLabel>
+				<ControlPageLabel>maxCoolSetpoint</ControlPageLabel>
+			</State>
+			<State id="maxHeatSetpoint">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>maxHeatSetpoint</TriggerLabel>
+				<ControlPageLabel>maxHeatSetpoint</ControlPageLabel>
+			</State>
+			<State id="minCoolSetpoint">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>minCoolSetpoint</TriggerLabel>
+				<ControlPageLabel>minCoolSetpoint</ControlPageLabel>
+			</State>
+			<State id="minHeatSetpoint">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>minHeatSetpoint</TriggerLabel>
+				<ControlPageLabel>minHeatSetpoint</ControlPageLabel>
+			</State>
+			<State id="fan_mode">
+				<ValueType>
+                    <List>
+                        <Option value="Auto">Auto</Option>
+                        <Option value="Circulate">Circulate</Option>
+                        <Option value="On">On</Option>
+                    </List>
+                </ValueType>
+				<TriggerLabel>Fan Mode Changed</TriggerLabel>
+                <TriggerLabelPrefix>Fan Mode Changed to</TriggerLabelPrefix>
+				<ControlPageLabel>Fan Mode</ControlPageLabel>
+                <ControlPageLabelPrefix>Fan Mode is</ControlPageLabelPrefix>
+			</State>
+			<State id="isFanRunning">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>isFanRunning</TriggerLabel>
+				<ControlPageLabel>isFanRunning</ControlPageLabel>
+			</State>
+			<State id="IndoorHumidity">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>IndoorHumidity</TriggerLabel>
+				<ControlPageLabel>IndoorHumidity</ControlPageLabel>
+			</State>
+			<State id="OutdoorHumidity">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>OutdoorHumidity</TriggerLabel>
+				<ControlPageLabel>OutdoorHumidity</ControlPageLabel>
+			</State>
 		</States>
 	</Device>
 </Devices>
