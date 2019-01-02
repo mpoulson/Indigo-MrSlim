@@ -83,6 +83,11 @@
 				<TriggerLabel>OutdoorHumidity</TriggerLabel>
 				<ControlPageLabel>OutdoorHumidity</ControlPageLabel>
 			</State>
+			<State id="OutdoorTemp">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>OutdoorTemp</TriggerLabel>
+				<ControlPageLabel>OutdoorTemp</ControlPageLabel>
+			</State>
 		</States>
 	</Device>
 	<Device type="thermostat" id="HoneyWellThermo">
@@ -167,6 +172,11 @@
 				<ValueType>Float</ValueType>
 				<TriggerLabel>OutdoorHumidity</TriggerLabel>
 				<ControlPageLabel>OutdoorHumidity</ControlPageLabel>
+			</State>
+			<State id="OutdoorTemp">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>OutdoorTemp</TriggerLabel>
+				<ControlPageLabel>OutdoorTemp</ControlPageLabel>
 			</State>
 		</States>
 	</Device>

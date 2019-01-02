@@ -100,6 +100,11 @@ class Plugin(indigo.PluginBase):
 		except: self.de (dev, "setpointCool")
 		try: self.updateStateOnServer(dev, "hvacOperationMode", map_to_indigo_hvac_mode[thermostat.SystemSwitch])
 		except: self.de (dev, "hvacOperationMode")
+
+		try: self.updateStateOnServer(dev, "thermostatMode", _lookupActionStrFromHvacMode(thermostat.SystemSwitch))
+		except: self.de (dev, "thermostatMode")
+
+		#Check to see if the device supports FANs.  
 		isFanEnabled = dev.pluginProps.get("SupportsHvacFanMode", None)
 		if isFanEnabled:
 			try: self.updateStateOnServer(dev, "hvacFanMode", map_to_indigo_fan_mode[thermostat.Fan.position])
@@ -118,6 +123,12 @@ class Plugin(indigo.PluginBase):
 		if thermostat.IndoorHumidity:
 			try: self.updateStateOnServer(dev, "IndoorHumidity", thermostat.IndoorHumidity)
 			except: self.de (dev, "IndoorHumidity")
+		if thermostat.OutdoorTemp:
+			try: self.updateStateOnServer(dev, "OutdoorTemp", thermostat.OutdoorTemp)
+			except: self.de (dev, "OutdoorTemp")
+		if thermostat.OutdoorHumidity or thermostat.OutdoorHumidity != 128.0000:
+			try: self.updateStateOnServer(dev, "OutdoorHumidity", thermostat.OutdoorHumidity)
+			except: self.de (dev, "OutdoorHumidity")
 
 		if  _lookupActionStrFromHvacMode(dev.states["hvacOperationMode"]) == "heat":
 			self.updateStateOnServer(dev, "hvacHeaterIsOn", True)
