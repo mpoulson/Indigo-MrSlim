@@ -83,8 +83,13 @@ class Plugin(indigo.PluginBase):
 		self.debugLog(u"Getting data for thermostatId: %s" % thermostatId)
 
 		thermostat = MrSlim.GetThermostat(self.MrSlim,thermostatId)
+
 		if not hasattr(thermostat, 'name'):
 			self.restartCount = 2000000 # Force restart
+			return
+		
+		if thermostat.name == None:
+			indigo.server.log(u"Error Getting data from server")
 			return
 		
 		self.debugLog(u"Device Name: %s" % thermostat.name)
